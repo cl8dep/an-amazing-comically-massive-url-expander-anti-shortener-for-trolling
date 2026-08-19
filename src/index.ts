@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import rateLimit from 'express-rate-limit';
 import { db, insertMassiveUrl, getTargetUrl, cleanupExpired } from './db';
 import { generateMassiveHash, formatUrl } from './generator';
 
@@ -9,14 +10,23 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
+// Limitador de peticiones (Rate Limit) para evitar spam de bots
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 30, // Limita a 30 peticiones por IP cada 15 minutos
+  message: { error: 'Demasiadas peticiones desde esta IP. Por favor, intenta de nuevo en 15 minutos.' },
+  standardHeaders: true, // Devuelve información en los headers `RateLimit-*`
+  legacyHeaders: false, // Deshabilita los headers obsoletos `X-RateLimit-*`
+});
+
 // Limpieza diaria de registros de más de 30 días
 setInterval(() => {
   cleanupExpired.run();
   console.log('Cleanup: Registros expirados eliminados');
 }, 24 * 60 * 60 * 1000);
 
-// API Endpoint para "alargar" la URL
-app.post('/api/lengthen', (req, res) => {
+// API Endpoint para "alargar" la URL (con Rate Limit aplicado)
+app.post('/api/lengthen', apiLimiter, (req, res) => {
   const { url } = req.body;
   
   if (!url || typeof url !== 'string') {

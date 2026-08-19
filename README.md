@@ -12,6 +12,7 @@ This project is an **Anti-Shortener**. It takes your normal URLs and converts th
 - **Maximized for Trolling**: Carefully calibrated to exactly 3950 characters, leaving just enough room for your domain (`https://your-domain.com/...`) to keep the total URL length right under Telegram's strict 4096-character message limit.
 - **Unbroken Text**: The generated seed words are combined without any spaces or underscores (`split(' ').join('')`), forcing messaging apps to treat it as one continuous, giant clickable link.
 - **Self-Destructing**: The massive URLs expire after exactly 30 days. An automatic background job cleans up the SQLite database daily to keep your server light.
+- **Anti-Bot Rate Limiting**: Built-in rate limiter using `express-rate-limit` prevents spam and API abuse (default: 30 requests per IP every 15 minutes).
 - **Lightning Fast**: Powered by `express` and `better-sqlite3` (with WAL mode) for blazing fast reads and writes.
 
 ## 🚀 Getting Started
