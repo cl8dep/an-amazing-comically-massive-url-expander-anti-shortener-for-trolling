@@ -1,0 +1,8 @@
+node_modules/
+dist/
+data/
+.env
+.npmrc
+test-bip.ts
+test-length.ts
+test-4000.ts

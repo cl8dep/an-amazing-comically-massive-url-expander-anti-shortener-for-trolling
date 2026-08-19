@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Lengthener (El Anti-Acortador)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-2xl w-full bg-slate-800 rounded-3xl shadow-2xl p-8 space-y-6 border border-slate-700">
+        <div class="text-center space-y-3">
+            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+                El Anti-Acortador
+            </h1>
+            <p class="text-slate-400 text-lg">Convierte una URL normal en un enlace inmensamente largo, feo y sospechoso para trolear a tus amigos. 😈</p>
+        </div>
+
+        <form id="form" class="space-y-4 pt-4">
+            <div>
+                <label for="urlInput" class="block text-sm font-medium text-slate-300 mb-2">URL Real (ej. google.com)</label>
+                <input type="text" id="urlInput" placeholder="google.com" required
+                    class="w-full px-4 py-4 bg-slate-900 border border-slate-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition text-white text-lg">
+            </div>
+            <button type="submit" id="submitBtn"
+                class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-4 rounded-xl transition shadow-lg flex justify-center items-center text-lg">
+                <span>¡Hacerla Inmensa!</span>
+            </button>
+        </form>
+
+        <!-- Resultados -->
+        <div id="resultBox" class="hidden mt-6 space-y-4">
+            <div class="p-5 bg-slate-900 border border-slate-700 rounded-xl">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-sm text-purple-400 font-bold uppercase tracking-wider">Tu URL Monstruosa</p>
+                    <button id="copyBtn" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded transition">
+                        Copiar
+                    </button>
+                </div>
+                <div class="max-h-48 overflow-y-auto custom-scrollbar">
+                    <p id="resHuge" class="text-sm text-slate-300 break-all font-mono leading-relaxed select-all"></p>
+                </div>
+            </div>
+            
+            <div class="text-center text-xs text-slate-500">
+                Lleva a: <span id="resTarget" class="font-bold text-slate-400"></span> <br>
+                Este monstruo se autodestruirá en 30 días.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('form');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultBox = document.getElementById('resultBox');
+        const copyBtn = document.getElementById('copyBtn');
+        let currentHugeUrl = '';
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) return;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+            resultBox.classList.add('hidden');
+
+            try {
+                const res = await fetch('/api/lengthen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    // Construir la URL completa basada en el dominio actual
+                    currentHugeUrl = window.location.origin + '/' + data.id;
+                    
+                    document.getElementById('resHuge').textContent = currentHugeUrl;
+                    document.getElementById('resTarget').textContent = data.target_url;
+                    resultBox.classList.remove('hidden');
+                } else {
+                    alert(data.error || 'Ocurrió un error.');
+                }
+            } catch (err) {
+                alert('No se pudo conectar con el servidor.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '¡Hacerla Inmensa!';
+                copyBtn.textContent = 'Copiar';
+                copyBtn.classList.remove('bg-green-600', 'hover:bg-green-500');
+                copyBtn.classList.add('bg-slate-700', 'hover:bg-slate-600');
+            }
+        });
+
+        copyBtn.addEventListener('click', () => {
+            if (currentHugeUrl) {
+                navigator.clipboard.writeText(currentHugeUrl).then(() => {
+                    copyBtn.textContent = '¡Copiado!';
+                    copyBtn.classList.remove('bg-slate-700', 'hover:bg-slate-600');
+                    copyBtn.classList.add('bg-green-600', 'hover:bg-green-500');
+                });
+            }
+        });
+    </script>
+    <style>
+        /* Scrollbar styling for the huge url box */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b; 
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+    </style>
+</body>
+</html>
